@@ -1,4 +1,3 @@
-# systeme-expert-plantes-prolog
 # 🌱 Système Expert de Diagnostic des Maladies de la Tomate avec Prolog
 
 **Mini-projet :** Système expert avec Prolog  
