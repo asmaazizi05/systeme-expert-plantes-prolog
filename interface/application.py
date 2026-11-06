@@ -18,6 +18,7 @@ Faits :
     symptome(Id, Organe, Texte).          ex: symptome(taches_brunes, feuilles, 'Taches brunes').
     question(Id, Organe, Texte).          ex: question(q_humidite, feuilles, 'Temps humide ces derniers jours ?').
     info(Probleme, Nom, Cause, Traitement, Prevention).
+    (déjà fournis par prolog/regles.pl)
 
 Prédicats dynamiques (remplis par l'interface avant le diagnostic) :
     :- dynamic symptome_observe/1.        symptome_observe(taches_brunes).
@@ -56,7 +57,11 @@ class PrologBackend:
         return [(self._txt(r["Id"]), self._txt(r["Texte"]))
                 for r in self.prolog.query(q)]
 
-    def questions(self, organe):
+    def questions(self, organe, symptomes=()):
+        # Les questions dépendent des symptômes déjà observés
+        list(self.prolog.query("retractall(symptome_observe(_))"))
+        for sy in symptomes:
+            list(self.prolog.query(f"assertz(symptome_observe({sy}))"))
         q = f"question(Id, {organe}, Texte)"
         return [(self._txt(r["Id"]), self._txt(r["Texte"]))
                 for r in self.prolog.query(q)]
@@ -121,7 +126,7 @@ class DemoBackend:
 
     def organes(self): return self.ORGANES
     def symptomes(self, o): return self.SYMPTOMES[o]
-    def questions(self, o): return self.QUESTIONS[o]
+    def questions(self, o, symptomes=()): return self.QUESTIONS[o]
 
     def diagnostiquer(self, organe, symptomes, reponses):
         scores = {}
@@ -217,7 +222,7 @@ def session(backend):
                                   backend.symptomes(organe))
 
     reponses = {}
-    questions = backend.questions(organe)
+    questions = backend.questions(organe, symptomes)
     if questions:
         print("\nQuelques questions pour affiner le diagnostic :")
         for qid, texte in questions:
